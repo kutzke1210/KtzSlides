@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="KtzSlides — Crie apresentações profissionais com 200 estilos e exporte para PowerPoint (.pptx) e PDF.">
+  <meta name="theme-color" content="#8b1a1a">
+  <title>KtzSlides — Criador de Apresentações Profissionais</title>
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <style>
+    /* Prevent FOUC and ensure panel hide works */
+    .panel-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="dev-credit">DESENVOLVIDO POR EDUARDO KUTZKE</div>
+
+  <header class="toolbar">
+    <div class="toolbar-brand">
+      <div class="icon">📊</div>
+      <span class="brand-text">KtzSlides</span>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-ghost btn-icon" id="btnNew" title="Nova Apresentação">🗎</button>
+      <button class="btn btn-ghost btn-icon" id="btnTheme" title="Temas e Estilos">🎨</button>
+      <button class="btn btn-ghost btn-icon" id="btnTransition" title="Transições e Efeitos">✨ Animações</button>
+      <button class="btn btn-ghost btn-icon" id="btnImportJSON" title="Importar Projeto">📂</button>
+      <button class="btn btn-ghost btn-icon" id="btnExportJSON" title="Salvar Projeto">💾</button>
+      <button class="btn btn-secondary" id="btnPresent" title="Modo Apresentação">▶ Apresentar</button>
+      <button class="btn btn-gold" id="btnExportPDF" title="Exportar para PDF">📄 PDF</button>
+      <button class="btn btn-primary" id="btnExport" title="Exportar para PowerPoint">⬇ .pptx</button>
+    </div>
+    <input type="file" id="jsonFileInput" accept=".json" style="display:none">
+  </header>
+
+  <div class="mobile-tabs">
+    <button class="mobile-tab active" data-tab="editor">✏️ Editor</button>
+    <button class="mobile-tab" data-tab="preview">👁 Preview</button>
+  </div>
+
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <div class="cover-section">
+          <h3>🎓 Slide de Capa</h3>
+          <div class="form-group">
+            <label>Título da Apresentação</label>
+            <input type="text" id="coverTitle" placeholder="Ex: História da Arte">
+          </div>
+          <div class="form-group">
+            <label>Nome do Aluno ou Grupo</label>
+            <input type="text" id="coverStudent" placeholder="Ex: Maria Santos">
+          </div>
+          <div class="form-group">
+            <label>Turma / Disciplina</label>
+            <input type="text" id="coverClass" placeholder="Ex: 3º Ano - História">
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="coverDate">
+          </div>
+        </div>
+
+        <div class="slides-section">
+          <h3>
+            <span>📑 Slides</span>
+            <span id="slideCount" style="font-size:0.68rem;color:var(--text-muted);">1 slides</span>
+          </h3>
+          
+          <div class="slide-card active" id="coverCard">
+            <div class="slide-card-number">C</div>
+            <div class="slide-card-info">
+              <div class="slide-card-title">Capa da Apresentação</div>
+              <div class="slide-card-preview">Título e introdução</div>
+            </div>
+          </div>
+          
+          <div class="slide-list" id="slideList"></div>
+          
+          <button class="add-slide-btn" id="addSlideBtn">＋ Adicionar Slide</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="slide-editor" id="slideEditor">
+        <!-- populated by js -->
+      </div>
+      
+      <div class="preview-area">
+        <div class="slide-preview-container">
+          <div class="slide-preview">
+            <div class="slide-preview-inner" id="slidePreviewInner">
+              <!-- populated by js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- THEME MODAL -->
+  <div class="modal-backdrop" id="themeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🎨 ESTILOS E TEMAS (200 Opções)</h3>
+        <div class="theme-category-tabs" id="themeCategoryTabs">
+          <!-- populated by js -->
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="theme-grid" id="themeGrid">
+          <!-- populated by js -->
+        </div>
+        
+        <div class="color-pickers">
+          <div class="color-picker-group">
+            <label>Cor Primária (Opcional)</label>
+            <input type="color" id="customAccent">
+          </div>
+          <div class="color-picker-group">
+            <label>Cor Secundária (Opcional)</label>
+            <input type="color" id="customSecondary">
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-top:20px;">
+          <label>Tamanho da Fonte Global (Todos os slides)</label>
+          <div class="font-size-control">
+            <span style="font-size:0.7rem;color:var(--text-muted)">A</span>
+            <input type="range" id="globalFontSize" min="50" max="150" step="5" value="100">
+            <span style="font-size:1.1rem;color:var(--text-muted)">A</span>
+            <span class="font-size-value" id="globalFontValue">100%</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="closeThemeModal">Fechar e Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSITION MODAL -->
+  <div class="modal-overlay" id="transitionModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>✨ ANIMAÇÕES E TRANSIÇÕES (25 Opções)</h3>
+        <div class="theme-category-tabs" id="transitionCategoryTabs">
+          <!-- populated by js -->
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="theme-grid" id="transitionGrid" style="grid-template-columns: repeat(2, 1fr);">
+          <!-- populated by js -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="closeTransitionModal">Pronto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESENTATION OVERLAY -->
+  <div class="presentation-overlay" id="presentationOverlay">
+    <div class="presentation-slide">
+      <div class="presentation-slide-content" id="presentationSlideContent">
+        <!-- populated by js -->
+      </div>
+    </div>
+    <div class="presentation-controls">
+      <div class="presentation-nav-buttons">
+        <button class="btn" onclick="Presentation.prev()">← Anterior</button>
+        <button class="btn" onclick="Presentation.next()">Próximo →</button>
+      </div>
+      <div class="presentation-progress" id="presentationProgress">1 / 1</div>
+      <button class="btn" onclick="Presentation.stop()">✕ Sair</button>
+    </div>
+  </div>
+
+  <!-- TOAST ALERTS -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Scripts -->
+  <script src="themes.js"></script>
+  <script src="transitions.js"></script>
+  <script src="slides.js"></script>
+  <script src="images.js"></script>
+  <script src="layoutEngine.js"></script>
+  <script src="exportPPTX.js"></script>
+  <script src="exportPDF.js"></script>
+  <script src="presentation.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>
